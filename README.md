@@ -68,3 +68,7 @@ household_balance/
 📬 Feedback
 If you have suggestions or feature requests, feel free to open an issue or pull request.
 
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
