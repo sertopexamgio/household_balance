@@ -10,7 +10,7 @@ Visualize your monthly balance, top spending categories, income vs expenses, sav
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-username/household_balance.git
+git clone https://github.com/sertopexamgio/household_balance.git
 cd household_balance
 ```
 
