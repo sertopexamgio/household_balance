@@ -58,7 +58,6 @@ household_balance/
 
 📌 Future Ideas
 ```
-    •	Upload transactions via PDFs
     •	Auto categorization
 	•	Tag recurring expenses
 	•	Forecasting future balances

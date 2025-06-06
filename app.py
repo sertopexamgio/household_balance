@@ -2,14 +2,50 @@ import streamlit as st
 from datetime import datetime
 from utils.db import init_db, add_expense, get_expenses, delete_expense
 from utils.visuals import plot_category_pie, show_category_totals
+from utils.llm import extract_transactions_from_text
 import pandas as pd
 import altair as alt
+import pdfplumber
 
 
 # --- Init ---
 init_db()
 st.set_page_config(page_title="House Expense Tracker", layout="wide")
 st.title("🏠 House Budget Tracker")
+
+# --- PDF Upload and Processing ---
+st.markdown("## 📤 Upload Bank Statement (PDF)")
+uploaded_file = st.file_uploader("Upload your bank statement", type="pdf")
+if uploaded_file:
+    with open("temp_statement.pdf", "wb") as f:
+        f.write(uploaded_file.getbuffer())
+    st.success("✅ PDF uploaded")
+
+    with pdfplumber.open("temp_statement.pdf") as pdf:
+        text = "\n".join([page.extract_text() for page in pdf.pages if page.extract_text()])
+
+    if text:
+        transactions = extract_transactions_from_text(text)
+        if transactions:
+            df_parsed = pd.DataFrame(transactions)
+            st.subheader("📋 Parsed Transactions")
+            st.dataframe(df_parsed)
+
+            if st.button("✅ Confirm & Add to Database"):
+                for _, row in df_parsed.iterrows():
+                    add_expense(
+                        row["bank_name"],
+                        row["month"],
+                        row["receiver"],
+                        row["category"],
+                        row["amount"],
+                    )
+                st.success("🎉 Transactions added.")
+                st.rerun()
+        else:
+            st.warning("⚠️ No valid transactions found in the PDF.")
+    else:
+        st.warning("⚠️ Could not extract text from the PDF.")
 
 
 # --- Form: Add Transaction ---
@@ -93,7 +129,7 @@ with st.expander("🗑 Delete Entry"):
 
 st.markdown("## 📅 Select a Month to Analyze")
 available_months = sorted(df["month"].unique(), reverse=True)
-available_months = pd.to_datetime(available_months).strftime("%Y-%m")
+available_months = pd.to_datetime(available_months).strftime("%Y-%m").tolist()
 
 today = datetime.today()
 first_of_this_month = today.replace(day=1)
@@ -109,7 +145,7 @@ selected_month = st.selectbox(
     index=default_index,
 )
 df_month = df[df["month"] == selected_month]
-df_without_transfer = df_month[df_month["type"] != "Transfer"].copy()
+df_without_transfer = df_month[df_month["category"] != "Transfer"].copy()
 
 # --- Summary ---
 st.subheader("📋 Monthly Summary")

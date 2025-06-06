@@ -2,3 +2,5 @@ matplotlib
 streamlit
 pandas
 altair
+openai
+pdfplumber
